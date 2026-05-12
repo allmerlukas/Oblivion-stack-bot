@@ -1,6 +1,6 @@
 const waveStore = require('../utils/waveStore');
 const ticketStore = require('../utils/ticketStore');
-const { sendWaveMessages, dmWaveToUser, executeCopy } = require('../commands/wave');
+const { sendWaveMessages, dmWaveToUser, executeCopy, copySessions, buildPageContent, buildNextRow } = require('../commands/wave');
 const {
   ChannelType, PermissionsBitField, ActionRowBuilder,
   ButtonBuilder, ButtonStyle, EmbedBuilder,
@@ -54,6 +54,38 @@ module.exports = {
 
     // ── Button interactions ───────────────────────────────────────────────────
     if (interaction.isButton()) {
+
+      // ── Wave copy: page through ads one at a time ─────────────────────────
+      if (interaction.customId.startsWith('wave_copy_next:')) {
+        const parts = interaction.customId.split(':');
+        const ownerId = parts[1];
+        const nextIdx = parseInt(parts[2], 10);
+
+        if (interaction.user.id !== ownerId) {
+          return interaction.reply({ content: '❌ This is not your wave copy session.', ephemeral: true });
+        }
+
+        const session = copySessions.get(ownerId);
+        if (!session || session.expiresAt < Date.now()) {
+          return interaction.update({ content: '❌ Session expired (10 min limit). Run `/wave copy` again.', components: [] });
+        }
+
+        const { ads } = session;
+        const total = ads.length;
+        const isLast = nextIdx >= total - 1;
+        const content = buildPageContent(ads[nextIdx], nextIdx + 1, total);
+
+        if (isLast) {
+          copySessions.delete(ownerId);
+          return interaction.update({ content: content + '\n\n✅ **Last ad! That\'s all of them.**', components: [] });
+        }
+
+        return interaction.update({
+          content,
+          components: [buildNextRow(ownerId, nextIdx + 1, total)],
+        });
+      }
+
       // Open a new ticket
       if (interaction.customId === 'ticket_open') {
         const config = ticketStore.getConfig(interaction.guildId);

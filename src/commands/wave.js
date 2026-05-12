@@ -3,6 +3,8 @@ const {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   ApplicationIntegrationType,
   InteractionContextType,
 } = require('discord.js');
@@ -91,6 +93,12 @@ async function filterAdsForGuild(client, ads, guildId) {
 
 // ── Main paste: filter current server, send each ad with 8s delay ─────────────
 async function sendWaveMessages(interaction, wave, useChannel = false, waveKey = null) {
+  // Defer immediately — filterAdsForGuild can take several seconds (invite API calls)
+  // Without this, Discord kills the interaction with "Unknown interaction" after 3s
+  if (!useChannel && !interaction.replied && !interaction.deferred) {
+    await interaction.deferReply();
+  }
+
   const allAds = wave.ads ?? wave.links ?? [];
 
   // Remove this server's own ad before sending
@@ -106,8 +114,8 @@ async function sendWaveMessages(interaction, wave, useChannel = false, waveKey =
 
   const sendOne = async (ad, isFirst) => {
     if (useChannel && interaction.channel) return interaction.channel.send(ad);
-    const alreadyReplied = interaction.replied || interaction.deferred;
-    if (isFirst && !alreadyReplied) return interaction.reply({ content: ad });
+    if (isFirst && interaction.deferred) return interaction.editReply({ content: ad });
+    if (isFirst && !interaction.replied) return interaction.reply({ content: ad });
     return interaction.followUp({ content: ad });
   };
 
@@ -166,7 +174,27 @@ async function dmWaveToUser(interaction, waveKey, wave) {
   }
 }
 
-// ── /wave copy helper: validate, chunk, send ephemeral ───────────────────────
+// ── /wave copy: button-paged one-ad-at-a-time flow ────────────────────────────
+// Sessions stored in memory; keyed by userId; TTL 10 minutes
+const copySessions = new Map();
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, s] of copySessions) if (s.expiresAt < now) copySessions.delete(id);
+}, 30 * 60 * 1000);
+
+function buildPageContent(ad, pageNum, total) {
+  return `📋 **Ad ${pageNum}/${total} — copy the text below:**\n\n${ad}`;
+}
+
+function buildNextRow(userId, nextIdx, total) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`wave_copy_next:${userId}:${nextIdx}`)
+      .setLabel(`Next ➡️  (${nextIdx + 1}/${total})`)
+      .setStyle(ButtonStyle.Primary)
+  );
+}
+
 async function executeCopy(interaction, wave) {
   const allAds = wave.ads ?? wave.links ?? [];
   const ads = await getValidAdsForGuild(interaction.client, allAds, interaction.guildId);
@@ -175,24 +203,19 @@ async function executeCopy(interaction, wave) {
     const msg = allAds.length > 0
       ? '⚠️ No ads to show — all are from this server or have dead links.'
       : '⚠️ This wave has no ads.';
-    // interaction may already be deferred or updated
-    if (interaction.deferred) return interaction.editReply({ content: msg });
-    return interaction.followUp({ content: msg, ephemeral: true });
+    if (interaction.deferred) return interaction.editReply({ content: msg, components: [] });
+    return interaction.followUp({ content: msg, ephemeral: true, components: [] });
   }
 
-  const chunks = buildChunks(ads);
+  // Store session so the Next button handler can access the ads
+  copySessions.set(interaction.user.id, { ads, expiresAt: Date.now() + 10 * 60 * 1000 });
 
-  // First chunk — edit deferred reply OR send as new ephemeral
-  if (interaction.deferred) {
-    await interaction.editReply({ content: chunks[0] });
-  } else {
-    await interaction.followUp({ content: chunks[0], ephemeral: true });
-  }
+  const total = ads.length;
+  const content = buildPageContent(ads[0], 1, total);
+  const components = total > 1 ? [buildNextRow(interaction.user.id, 1, total)] : [];
 
-  // Remaining chunks as ephemeral followUps
-  for (let i = 1; i < chunks.length; i++) {
-    await interaction.followUp({ content: chunks[i], ephemeral: true });
-  }
+  if (interaction.deferred) return interaction.editReply({ content, components });
+  return interaction.followUp({ content, ephemeral: true, components });
 }
 
 module.exports = {
@@ -200,6 +223,9 @@ module.exports = {
   dmWaveToUser,
   executeCopy,
   ordinal,
+  copySessions,
+  buildPageContent,
+  buildNextRow,
 
   data: new SlashCommandBuilder()
     .setName('wave')
