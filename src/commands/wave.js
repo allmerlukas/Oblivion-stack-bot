@@ -184,7 +184,7 @@ async function dmWaveToUser(interaction, waveKey, wave) {
   }
 }
 
-// ── /wave copy: button-paged one-ad-at-a-time flow ────────────────────────────
+// ── /wave copy: button-paged chunk flow ───────────────────────────────────────
 // Sessions stored in memory; keyed by userId; TTL 10 minutes
 const copySessions = new Map();
 setInterval(() => {
@@ -192,15 +192,16 @@ setInterval(() => {
   for (const [id, s] of copySessions) if (s.expiresAt < now) copySessions.delete(id);
 }, 30 * 60 * 1000);
 
-function buildPageContent(ad, pageNum, total) {
-  return `📋 **Ad ${pageNum}/${total} — copy the text below:**\n\n${ad}`;
+function buildPageContent(chunk, pageNum, totalPages, totalAds) {
+  const adNote = totalAds != null ? ` (${totalAds} ads total)` : '';
+  return `📋 **Page ${pageNum}/${totalPages}${adNote} — copy below:**\n\n${chunk}`;
 }
 
-function buildNextRow(userId, nextIdx, total) {
+function buildNextRow(userId, nextIdx, totalPages) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`wave_copy_next:${userId}:${nextIdx}`)
-      .setLabel(`Next ➡️  (${nextIdx + 1}/${total})`)
+      .setLabel(`Next ads ➡️  (${nextIdx + 1}/${totalPages})`)
       .setStyle(ButtonStyle.Primary)
   );
 }
@@ -219,12 +220,13 @@ async function executeCopy(interaction, wave) {
     return interaction.followUp({ content: msg, ephemeral: true, components: [] });
   }
 
-  // Store session so the Next button handler can access the ads
-  copySessions.set(interaction.user.id, { ads, expiresAt: Date.now() + 10 * 60 * 1000 });
+  // Pack ads into ≤2000 char chunks — each page shows as many ads as possible
+  const chunks = buildChunks(ads);
+  copySessions.set(interaction.user.id, { chunks, expiresAt: Date.now() + 10 * 60 * 1000 });
 
-  const total = ads.length;
-  const content = buildPageContent(ads[0], 1, total);
-  const components = total > 1 ? [buildNextRow(interaction.user.id, 1, total)] : [];
+  const totalPages = chunks.length;
+  const content = buildPageContent(chunks[0], 1, totalPages, ads.length);
+  const components = totalPages > 1 ? [buildNextRow(interaction.user.id, 1, totalPages)] : [];
 
   if (interaction.deferred) return interaction.editReply({ content, components });
   return interaction.followUp({ content, ephemeral: true, components });

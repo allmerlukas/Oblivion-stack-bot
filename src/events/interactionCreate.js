@@ -70,24 +70,24 @@ module.exports = {
           return interaction.update({ content: '❌ Session expired (10 min limit). Run `/wave copy` again.', components: [] });
         }
 
-        const { ads } = session;
-        const total = ads.length;
-        const isLast = nextIdx >= total - 1;
-        const content = buildPageContent(ads[nextIdx], nextIdx + 1, total);
+        const { chunks } = session;
+        const totalPages = chunks.length;
+        const isLast = nextIdx >= totalPages - 1;
+        const content = buildPageContent(chunks[nextIdx], nextIdx + 1, totalPages);
 
         // Strip the button from the old message so it stays where it is (no scrolling)
-        // Then send the new ad as a fresh message at the bottom
+        // Then send the new chunk as a fresh message at the bottom
         await interaction.update({ components: [] });
 
         if (isLast) {
           copySessions.delete(ownerId);
-          return interaction.followUp({ ephemeral: true, content: content + '\n\n✅ **Last ad! That\'s all of them.**', components: [] });
+          return interaction.followUp({ ephemeral: true, content: content + '\n\n✅ **Last page! That\'s all of them.**', components: [] });
         }
 
         return interaction.followUp({
           ephemeral: true,
           content,
-          components: [buildNextRow(ownerId, nextIdx + 1, total)],
+          components: [buildNextRow(ownerId, nextIdx + 1, totalPages)],
         });
       }
 
