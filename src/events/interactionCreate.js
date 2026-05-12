@@ -1,6 +1,10 @@
 const waveStore = require('../utils/waveStore');
 const ticketStore = require('../utils/ticketStore');
 const { sendWaveMessages, dmWaveToUser, executeCopy } = require('../commands/wave');
+const {
+  ChannelType, PermissionsBitField, ActionRowBuilder,
+  ButtonBuilder, ButtonStyle, EmbedBuilder,
+} = require('discord.js');
 
 module.exports = {
   name: 'interactionCreate',
@@ -55,9 +59,15 @@ module.exports = {
         const config = ticketStore.getConfig(interaction.guildId);
         if (!config) return interaction.reply({ content: '❌ Ticket system not configured.', ephemeral: true });
 
-        // Check for existing open ticket
-        const existing = Object.entries(ticketStore.getTicket ? {} : {}).find(() => false); // placeholder
-        const { ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+        // Prevent duplicate tickets — check if this user already has one open
+        const allTickets = ticketStore.getAllTicketsForGuild(interaction.guildId);
+        const existing = allTickets.find(t => t.userId === interaction.user.id);
+        if (existing) {
+          return interaction.reply({
+            content: `❌ You already have an open ticket: <#${existing.channelId}>`,
+            ephemeral: true,
+          });
+        }
 
         const num = ticketStore.nextTicketNumber(interaction.guildId);
         const channelName = `ticket-${String(num).padStart(4, '0')}-${interaction.user.username.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16)}`;

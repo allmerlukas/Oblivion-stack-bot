@@ -24,9 +24,8 @@ module.exports = {
       messages = messages.first(amount);
     }
 
-    // Discord can only bulk-delete messages < 14 days old
     const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
-    const deletable = messages.filter ? messages.filter(m => m.createdTimestamp > twoWeeksAgo) : messages.filter(m => m.createdTimestamp > twoWeeksAgo);
+    const deletable = messages.filter(m => m.createdTimestamp > twoWeeksAgo);
 
     const deleted = await interaction.channel.bulkDelete(deletable, true).catch(() => null);
     const count = deleted?.size ?? 0;

@@ -43,6 +43,13 @@ function getTicket(channelId) {
   return load().tickets[channelId] ?? null;
 }
 
+function getAllTicketsForGuild(guildId) {
+  const data = load();
+  return Object.entries(data.tickets)
+    .filter(([, t]) => t.guildId === guildId)
+    .map(([channelId, t]) => ({ channelId, ...t }));
+}
+
 function nextTicketNumber(guildId) {
   const data = load();
   const nums = Object.values(data.tickets)
@@ -51,4 +58,4 @@ function nextTicketNumber(guildId) {
   return (nums.length ? Math.max(...nums) : 0) + 1;
 }
 
-module.exports = { setConfig, getConfig, addTicket, removeTicket, getTicket, nextTicketNumber };
+module.exports = { setConfig, getConfig, addTicket, removeTicket, getTicket, getAllTicketsForGuild, nextTicketNumber };

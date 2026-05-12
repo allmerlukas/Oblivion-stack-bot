@@ -33,7 +33,7 @@ module.exports = {
         { name: '🤖 Bot?', value: user.bot ? 'Yes' : 'No', inline: true },
         { name: '📅 Account Created', value: createdAt, inline: false },
         { name: '📥 Joined Server', value: joinedServer, inline: false },
-        { name: `🏷️ Roles (${target.roles?.cache.size - 1 ?? 0})`, value: roles.slice(0, 1024), inline: false },
+        { name: `🏷️ Roles (${(target.roles?.cache.size ?? 1) - 1})`, value: roles.slice(0, 1024), inline: false },
       )
       .setFooter({ text: `Requested by ${interaction.user.tag}` })
       .setTimestamp();

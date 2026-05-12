@@ -27,9 +27,11 @@ module.exports = {
     if ((target.id ?? target.user?.id) === interaction.user.id) return interaction.reply({ content: '❌ You cannot ban yourself.', ephemeral: true });
 
     try {
-      await target.send?.(`🔨 You have been **banned** from **${interaction.guild.name}**.\n**Reason:** ${reason}`).catch(() => {});
+      const userToMsg = target.user ?? target;
+      await userToMsg.send(`🔨 You have been **banned** from **${interaction.guild.name}**.\n**Reason:** ${reason}`).catch(() => {});
       await interaction.guild.members.ban(target, { reason, deleteMessageSeconds: days * 86400 });
-      return interaction.reply({ content: `✅ **${target.tag ?? target.user?.tag}** has been banned.\n**Reason:** ${reason}`, ephemeral: false });
+      const tag = target.user?.tag ?? target.tag ?? target.user?.username ?? 'Unknown';
+      return interaction.reply({ content: `✅ **${tag}** has been banned.\n**Reason:** ${reason}`, ephemeral: false });
     } catch {
       return interaction.reply({ content: '❌ Failed to ban the user.', ephemeral: true });
     }
