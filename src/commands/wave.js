@@ -112,17 +112,19 @@ async function sendWaveMessages(interaction, wave, useChannel = false, waveKey =
     return useChannel ? interaction.channel?.send(reply.content) : interaction.reply(reply);
   }
 
-  const sendOne = async (ad, isFirst) => {
-    if (useChannel && interaction.channel) return interaction.channel.send(ad);
-    if (isFirst && interaction.deferred) return interaction.editReply({ content: ad });
-    if (isFirst && !interaction.replied) return interaction.reply({ content: ad });
-    return interaction.followUp({ content: ad });
+  const sendOne = async (chunk, isFirst) => {
+    if (useChannel && interaction.channel) return interaction.channel.send(chunk);
+    if (isFirst && interaction.deferred) return interaction.editReply({ content: chunk });
+    if (isFirst && !interaction.replied) return interaction.reply({ content: chunk });
+    return interaction.followUp({ content: chunk });
   };
 
-  await sendOne(ads[0], true);
-  for (let i = 1; i < ads.length; i++) {
+  // Pack as many ads as possible into ≤2000 char chunks, send one chunk per 8s
+  const chunks = buildChunks(ads);
+  await sendOne(chunks[0], true);
+  for (let i = 1; i < chunks.length; i++) {
     await new Promise(r => setTimeout(r, AD_DELAY));
-    await sendOne(ads[i], false);
+    await sendOne(chunks[i], false);
   }
 
   // DM "done" + channel jump link
