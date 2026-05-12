@@ -26,13 +26,13 @@ function stripMaskedLinks(text) {
 
 const AD_DELAY = 8000;
 
-// Packs ads into ≤2000 char messages without splitting any single ad
-function buildChunks(ads) {
+// Packs ads into ≤maxLen char messages without splitting any single ad
+function buildChunks(ads, maxLen = 2000) {
   const chunks = [];
   let current = '';
   for (const ad of ads) {
     const joined = current ? current + '\n\n' + ad : ad;
-    if (joined.length > 2000) {
+    if (joined.length > maxLen) {
       if (current) chunks.push(current);
       current = ad;
     } else {
@@ -220,8 +220,8 @@ async function executeCopy(interaction, wave) {
     return interaction.followUp({ content: msg, ephemeral: true, components: [] });
   }
 
-  // Pack ads into ≤2000 char chunks — each page shows as many ads as possible
-  const chunks = buildChunks(ads);
+  // Pack ads into chunks — use 1940 max to leave room for the page header
+  const chunks = buildChunks(ads, 1940);
   copySessions.set(interaction.user.id, { chunks, expiresAt: Date.now() + 10 * 60 * 1000 });
 
   const totalPages = chunks.length;
