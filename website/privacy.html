@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Oblivion Bot</title>
+  <meta name="description" content="Privacy Policy for Oblivion, a Discord bot. Learn what data we collect and how we use it." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      🌊 <span>Oblivion</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="terms.html">Terms of Service</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-badge">🔒 Legal</div>
+    <h1>Privacy Policy</h1>
+    <p>This policy explains what data Oblivion collects, why it collects it, and how it is stored and protected.</p>
+    <span class="last-updated">📅 Last updated: May 15, 2025</span>
+  </div>
+
+  <div class="container">
+
+    <!-- Table of Contents -->
+    <div class="toc">
+      <h3>Contents</h3>
+      <ol>
+        <li><a href="#s1">Who We Are</a></li>
+        <li><a href="#s2">Data We Collect</a></li>
+        <li><a href="#s3">Why We Collect It</a></li>
+        <li><a href="#s4">Data Storage &amp; Security</a></li>
+        <li><a href="#s5">Data Retention</a></li>
+        <li><a href="#s6">Third Parties</a></li>
+        <li><a href="#s7">Your Rights</a></li>
+        <li><a href="#s8">Children's Privacy</a></li>
+        <li><a href="#s9">Changes to This Policy</a></li>
+        <li><a href="#s10">Contact</a></li>
+      </ol>
+    </div>
+
+    <div class="info-box note">
+      <span class="info-box-icon">💡</span>
+      <div>Oblivion does <strong>not</strong> sell, rent, or share your data with any third party for advertising or commercial purposes.</div>
+    </div>
+
+    <!-- 1 -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <h2>Who We Are</h2>
+      </div>
+      <p>Oblivion ("the Bot", "we", "our") is a Discord bot providing partner management, auto-wave ad exchange, giveaway management, ticket systems, and general server moderation tools.</p>
+      <p>The Bot is operated by its developer ("Developer"). For contact information, see <a href="#s10" style="color:var(--accent2)">Section 10</a>.</p>
+    </div>
+
+    <!-- 2 -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <h2>Data We Collect</h2>
+      </div>
+      <p>Oblivion only collects data that is strictly necessary to provide its features. The table below lists every type of data stored:</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Data Type</th>
+            <th>Examples</th>
+            <th>Purpose</th>
+            <th>Stored?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Guild (Server) IDs</td>
+            <td>Server identifier</td>
+            <td>Per-server configuration</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Channel IDs</td>
+            <td>Partner/ad/log channel</td>
+            <td>Auto-Wave routing</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Role IDs</td>
+            <td>Member/ping roles</td>
+            <td>Ping tier logic</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td>User IDs</td>
+            <td>Giveaway host, ticket owner</td>
+            <td>Giveaways, tickets, partner tracking</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Usernames</td>
+            <td>Discord username</td>
+            <td>Partner link display</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Message content</td>
+            <td>Ad text in ad channel</td>
+            <td>Read-only for Auto-Wave sends; never stored permanently</td>
+            <td><span class="tag purple">Read only</span></td>
+          </tr>
+          <tr>
+            <td>Partner URLs</td>
+            <td>Server invite links</td>
+            <td>Partner link tracking / deduplication</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box warning">
+        <span class="info-box-icon">⚠️</span>
+        <div>Oblivion does <strong>not</strong> read general message content in your server. It only reads messages in the specific channel you designate as your ad channel via <code>/config setup</code>.</div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <h2>Why We Collect It</h2>
+      </div>
+      <p>All data collection is tied to a specific bot feature:</p>
+      <ul>
+        <li><strong>Guild &amp; channel IDs</strong> — to route Auto-Wave partner ads to the correct channels.</li>
+        <li><strong>Role IDs</strong> — to determine the correct ping tier when a partner ad is sent.</li>
+        <li><strong>User IDs &amp; usernames</strong> — to associate giveaways and tickets with the user who created them, and to display partner statistics.</li>
+        <li><strong>Partner URLs</strong> — to deduplicate partner links and provide per-day partnership statistics.</li>
+      </ul>
+    </div>
+
+    <!-- 4 -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <h2>Data Storage &amp; Security</h2>
+      </div>
+      <p>All data is stored locally in a <strong>SQLite database</strong> on the server running the bot. The database file is:</p>
+      <ul>
+        <li>Not publicly accessible.</li>
+        <li>Not uploaded to any cloud database or external service.</li>
+        <li>Protected by the server's own access controls.</li>
+      </ul>
+      <div class="info-box success">
+        <span class="info-box-icon">✅</span>
+        <div>No external database providers (e.g. Firebase, MongoDB Atlas, Supabase) are used. Your data stays on the bot's host machine.</div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <h2>Data Retention</h2>
+      </div>
+      <ul>
+        <li><strong>Guild configuration</strong> — retained while the bot remains in your server. Removing the bot does not automatically delete your config; you may request deletion (see Section 7).</li>
+        <li><strong>Giveaways</strong> — deleted automatically when the giveaway ends.</li>
+        <li><strong>Tickets</strong> — deleted when the ticket channel is closed.</li>
+        <li><strong>Partner links</strong> — daily records are pruned after 30 days automatically.</li>
+        <li><strong>Error logs</strong> — a rolling window of the most recent 200 errors; older entries are deleted automatically.</li>
+      </ul>
+    </div>
+
+    <!-- 6 -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <h2>Third Parties</h2>
+      </div>
+      <p>Oblivion does not share your data with any third party. The only external service the bot communicates with is <strong>Discord's API</strong> (api.discord.com), which is required for the bot to function. Discord's own privacy policy applies to data held by Discord.</p>
+    </div>
+
+    <!-- 7 -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <div class="section-num">7</div>
+        <h2>Your Rights</h2>
+      </div>
+      <p>You have the right to:</p>
+      <ul>
+        <li><strong>Access</strong> — request a summary of what data is stored for your guild or user ID.</li>
+        <li><strong>Deletion</strong> — request that all data associated with your guild or user ID be deleted.</li>
+        <li><strong>Correction</strong> — update any stored data via the bot's slash commands (e.g. <code>/config setup</code>).</li>
+      </ul>
+      <p>To exercise these rights, contact us via the information in <a href="#s10" style="color:var(--accent2)">Section 10</a>.</p>
+    </div>
+
+    <!-- 8 -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <div class="section-num">8</div>
+        <h2>Children's Privacy</h2>
+      </div>
+      <p>Oblivion is not directed at children under the age of 13. We do not knowingly collect personal data from children. Discord's own Terms of Service require users to be at least 13 years old.</p>
+    </div>
+
+    <!-- 9 -->
+    <div class="section" id="s9">
+      <div class="section-header">
+        <div class="section-num">9</div>
+        <h2>Changes to This Policy</h2>
+      </div>
+      <p>We may update this Privacy Policy from time to time. When we do, we will update the "Last updated" date at the top of this page. Continued use of the bot after changes constitutes acceptance of the revised policy.</p>
+    </div>
+
+    <!-- 10 -->
+    <div class="section" id="s10">
+      <div class="section-header">
+        <div class="section-num">10</div>
+        <h2>Contact</h2>
+      </div>
+      <p>For any privacy-related questions or data deletion requests, contact the bot developer:</p>
+      <a href="https://discord.com/users/" class="contact-card">
+        <div class="contact-icon">💬</div>
+        <div>
+          <h4>Discord</h4>
+          <p>Message the developer directly on Discord</p>
+        </div>
+      </a>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>© 2025 Oblivion Bot · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a></p>
+  </footer>
+
+</body>
+</html>
