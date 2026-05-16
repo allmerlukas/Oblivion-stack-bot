@@ -259,20 +259,26 @@ async function tick(client) {
     // 4. Find a valid target ───────────────────────────────────────────────────
     const now     = Date.now();
     const targets = shuffle(configured.filter(e => e.guildId !== sourceId));
+    let partnerSent = false;
+
+    // Track skip reasons for the no-match log
+    let skippedCooldown = 0;
+    let skippedMembers  = 0;
 
     for (const { guild: targetGuild, cfg: targetCfg, guildId: targetId } of targets) {
 
       // a. Member minimum
-      if (targetGuild.memberCount < MIN_MEMBERS) continue;
+      if (targetGuild.memberCount < MIN_MEMBERS) { skippedMembers++; continue; }
 
       // b. Per-server cooldown
       const delayMs  = Math.max((targetCfg.partnerDelayHours ?? 24) * 3_600_000, MIN_COOLDOWN_MS);
       const lastRecv = autoWaveStore.getLastReceived(targetId);
-      if (now - lastRecv < delayMs) continue;
+      if (now - lastRecv < delayMs) { skippedCooldown++; continue; }
 
       // c. 3-day pair cooldown
       if (pairedRecently(sourceId, targetId)) {
         console.log(`[AutoWave] ⏭  ${sourceGuild.name} → ${targetGuild.name}: pair cooldown active`);
+        skippedCooldown++;
         continue;
       }
 
@@ -306,6 +312,7 @@ async function tick(client) {
         );
 
         console.log(`[AutoWave] ✅ ${sourceGuild.name} → ${targetGuild.name} (ping: ${ping || 'none'})`);
+        partnerSent = true;
       } catch (err) {
         await logToGuild(targetGuild, targetCfg,
           `⚠️ **Auto-Wave:** An ad was scheduled for your server but could not be delivered. ` +
@@ -316,6 +323,29 @@ async function tick(client) {
       }
 
       break; // one pair per tick
+    }
+
+    // ── No partner found — notify source guild ────────────────────────────────
+    if (!partnerSent) {
+      const total = targets.length;
+
+      let reason;
+      if (total === 0) {
+        reason = 'There are no other servers in the Auto-Wave network yet.';
+      } else if (skippedMembers === total) {
+        reason = `All ${total} network server(s) are below the 25-member minimum.`;
+      } else if (skippedCooldown > 0 && skippedCooldown + skippedMembers >= total) {
+        reason =
+          `All available servers are currently on cooldown (3-day pair limit). ` +
+          `The network will retry next tick. **${skippedCooldown}** server(s) on cooldown.`;
+      } else {
+        reason = `No eligible partner was found this tick (${total} server(s) checked).`;
+      }
+
+      await logToGuild(sourceGuild, sourceCfg,
+        `⏳ **Auto-Wave:** No partner sent this tick.\n> ${reason}`
+      );
+      console.log(`[AutoWave] ⏳ No partner for ${sourceGuild.name} — ${reason}`);
     }
 
   } catch (err) {
