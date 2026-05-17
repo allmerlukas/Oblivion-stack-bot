@@ -34,6 +34,11 @@ module.exports = {
       return interaction.update(buildStepMessage(interaction.guildId, nextStep));
     }
 
+    // ── Partner edit: modal submit ────────────────────────────────────────────────
+    if (interaction.isModalSubmit() && interaction.customId.startsWith('pm_edit_modal:')) {
+      return partnerCmd.handleModal(interaction);
+    }
+
     // ── Config wizard: channel select ─────────────────────────────────────────
     if (interaction.isChannelSelectMenu() && interaction.customId.startsWith('cfg_')) {
       const [stepId, stepIndexStr] = interaction.customId.split(':');
@@ -162,6 +167,47 @@ module.exports = {
       // ── Partner wave: pick which server gets double ───────────────────────
       if (interaction.customId.startsWith('pm_wave_double_select:')) {
         return partnerCmd.handleSelect(interaction);
+      }
+
+      // ── Partner edit: guild picker ──────────────────────────────────────────
+      if (interaction.customId.startsWith('pm_edit_select:')) {
+        const [, userId] = interaction.customId.split(':');
+        if (interaction.user.id !== userId) {
+          return interaction.reply({ content: '❌ This is not your session.', ephemeral: true });
+        }
+
+        const pmStore  = require('../utils/pmStore');
+        const guildId  = interaction.values[0];
+        const guild    = pmStore.getGuilds(userId).find(g => g.guild_id === guildId);
+
+        const modal = new ModalBuilder()
+          .setCustomId(`pm_edit_modal:${userId}:${guildId}`)
+          .setTitle('Edit Guild');
+
+        const channelInput = new TextInputBuilder()
+          .setCustomId('pm_edit_channel')
+          .setLabel('Partner Channel ID')
+          .setStyle(TextInputStyle.Short)
+          .setValue(guild?.channel_id ?? '')
+          .setPlaceholder('e.g. 123456789012345678')
+          .setRequired(true)
+          .setMaxLength(19);
+
+        const labelInput = new TextInputBuilder()
+          .setCustomId('pm_edit_label')
+          .setLabel('Nickname (leave blank to clear)')
+          .setStyle(TextInputStyle.Short)
+          .setValue(guild?.label ?? '')
+          .setPlaceholder('e.g. My Main Server')
+          .setRequired(false)
+          .setMaxLength(40);
+
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(channelInput),
+          new ActionRowBuilder().addComponents(labelInput),
+        );
+
+        return interaction.showModal(modal);
       }
 
       return;

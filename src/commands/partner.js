@@ -19,6 +19,9 @@ const {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   EmbedBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } = require('discord.js');
 
 const pmStore = require('../utils/pmStore');
@@ -185,6 +188,11 @@ module.exports = {
     .addSubcommand(sub =>
       sub.setName('wave')
         .setDescription('Pair ALL your guilds together in one big session')
+    )
+
+    .addSubcommand(sub =>
+      sub.setName('edit')
+        .setDescription('Edit the channel ID or label of a registered guild')
     ),
 
   // ─── Execute ─────────────────────────────────────────────────────────────────
@@ -265,6 +273,33 @@ module.exports = {
       return interaction.reply({
         embeds: [buildMatchEmbed(g1, g2)],
         components: [buildConfirmRow(userId, g1.guild_id, g2.guild_id)],
+        ephemeral: true,
+      });
+    }
+
+    // ── /partner edit ─────────────────────────────────────────────────────────
+    if (sub === 'edit') {
+      const guilds = pmStore.getGuilds(userId);
+
+      if (guilds.length === 0) {
+        return interaction.reply({ content: '📭 No guilds registered. Use `/partner setup` to add your first one.', ephemeral: true });
+      }
+
+      const select = new StringSelectMenuBuilder()
+        .setCustomId(`pm_edit_select:${userId}`)
+        .setPlaceholder('Choose a guild to edit...')
+        .addOptions(
+          guilds.slice(0, 25).map(g =>
+            new StringSelectMenuOptionBuilder()
+              .setLabel(guildName(g).replace(/`/g, '').slice(0, 100))
+              .setDescription(`Channel: ${g.channel_id}`.slice(0, 100))
+              .setValue(g.guild_id)
+          )
+        );
+
+      return interaction.reply({
+        content: '✏️ Which guild do you want to edit?',
+        components: [new ActionRowBuilder().addComponents(select)],
         ephemeral: true,
       });
     }
@@ -454,4 +489,36 @@ module.exports = {
       });
     }
   },
+
+  // ─── Modal handler ────────────────────────────────────────────────────────────
+
+  async handleModal(interaction) {
+    // pm_edit_modal:<userId>:<guildId>
+    const parts   = interaction.customId.split(':');
+    const userId  = parts[1];
+    const guildId = parts[2];
+
+    if (interaction.user.id !== userId) {
+      return interaction.reply({ content: '\u274c This is not your session.', ephemeral: true });
+    }
+
+    const newChannelId = interaction.fields.getTextInputValue('pm_edit_channel').trim();
+    const newLabel     = interaction.fields.getTextInputValue('pm_edit_label').trim() || null;
+
+    if (!/^\d{17,19}$/.test(newChannelId)) {
+      return interaction.reply({ content: '\u274c Invalid channel ID — must be a 17-19 digit number.', ephemeral: true });
+    }
+
+    pmStore.addGuild(userId, guildId, newChannelId, newLabel);
+
+    return interaction.reply({
+      content: [
+        `\u2705 Updated guild \`${guildId}\`.`,
+        `\ud83d\udce2 Partner channel: \`${newChannelId}\``,
+        newLabel ? `\ud83c\udff7\ufe0f Label: **${newLabel}**` : '\ud83c\udff7\ufe0f Label: *(cleared)*',
+      ].join('\n'),
+      ephemeral: true,
+    });
+  },
 };
+
