@@ -18,7 +18,7 @@ const path = require('path');
 // - giveaway.js  → guild-only (bcreate), requires bot in server
 // - partners.js  → guild-only, requires bot in server
 const GLOBAL_COMMANDS = [
-  'wave.js', 'giveaway.js', 'partners.js', 'bend.js', 'brig.js',
+  'wave.js', 'giveaway.js', 'partners.js', 'partner.js', 'bend.js', 'brig.js',
   'purge.js', 'kick.js', 'ban.js', 'unban.js',
   'timeout.js', 'userinfo.js', 'serverinfo.js', 'avatar.js', 'ping.js',
   'ticket.js', 'setup.js', 'lock.js', 'slowmode.js',

@@ -144,6 +144,25 @@ db.exec(`
     domain    TEXT PRIMARY KEY,   -- e.g. 'twitch.tv', 'youtube.com'
     added_at  INTEGER NOT NULL
   );
+
+  -- Partner Manager: guilds each user manages (/partner setup, /partner add)
+  CREATE TABLE IF NOT EXISTS pm_guilds (
+    user_id    TEXT NOT NULL,
+    guild_id   TEXT NOT NULL,
+    channel_id TEXT NOT NULL,   -- partner channel in that guild
+    label      TEXT,            -- optional display name
+    added_at   INTEGER NOT NULL,
+    PRIMARY KEY (user_id, guild_id)
+  );
+
+  -- Partner Manager: tracks when user paired two of their guilds
+  CREATE TABLE IF NOT EXISTS pm_pairs (
+    user_id        TEXT NOT NULL,
+    guild_a        TEXT NOT NULL,   -- lexicographically smaller guild ID
+    guild_b        TEXT NOT NULL,
+    last_paired_at INTEGER NOT NULL,
+    PRIMARY KEY (user_id, guild_a, guild_b)
+  );
 `);
 
 module.exports = db;

@@ -3,6 +3,7 @@ const ticketStore = require('../utils/ticketStore');
 const { sendWaveMessages, dmWaveToUser, executeCopy, copySessions, buildPageContent, buildNextRow } = require('../commands/wave');
 const { STEPS, buildStepMessage, buildSummary } = require('../commands/config');
 const setupStore = require('../utils/setupStore');
+const partnerCmd = require('../commands/partner');
 const {
   ChannelType, PermissionsBitField, ActionRowBuilder,
   ButtonBuilder, ButtonStyle, EmbedBuilder,
@@ -199,6 +200,10 @@ module.exports = {
         });
       }
 
+      // ── Partner manager: confirm / re-roll ─────────────────────────────────
+      if (interaction.customId.startsWith('pm_confirm:') || interaction.customId.startsWith('pm_reroll:')) {
+        return partnerCmd.handleButton(interaction);
+      }
 
       // Open a new ticket
       if (interaction.customId === 'ticket_open') {
